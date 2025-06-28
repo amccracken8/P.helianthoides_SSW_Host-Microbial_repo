@@ -1,0 +1,219 @@
+#install miniconda3
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+
+#Install Qiime2
+conda env create -n qiime2-amplicon-2024.5 --file https://data.qiime2.org/distro/amplicon/qiime2-amplicon-2024.5-py39-linux-conda.yml
+
+conda update qiime2-amplicon-2024.5
+
+#Rawdata Moved to VACC 
+/users/a/r/armccrac/data/AK_pycno_16s/rawdata
+
+# working directory for sylva db pycno run on Pespeni Server
+/users/a/r/armccrac/sylva_AKpycno
+
+# activate qiime2
+conda activate qiime2-amplicon-2024.5
+
+# move manifest file into Directory using secure file transfer
+/users/a/r/armccrac/sylva_AKpycno/pyc_sylva_manifest.txt
+
+conda activate qiime2-amplicon-2024.5
+# or conda activate qiime2-2021.11 --> but 2021.8 was used for the original analysis
+export TMPDIR="/users/a/r/armccrac/data/AK_pycno_16s/tmptmpdir"  
+echo $TMPDIR 
+
+###import Data: Using the Full Dataser (subset available)
+qiime tools import \
+  --type 'SampleData[PairedEndSequencesWithQuality]' \
+  --input-path /users/a/r/armccrac/data/AK_pycno_16s/pyc_sylva_manifest.txt \
+  --input-format PairedEndFastqManifestPhred33V2 \
+  --output-path demux-paired-end_full.qza
+  
+  
+  ###Generate summary plots on the data quality!
+qiime demux summarize \
+  --i-data demux-paired-end_full.qza \         
+  --o-visualization demux-pyc-full.qzv
+  
+##Data-2 denoising stats
+### DATA-2 --> run in seperate sheet takes hours to run (run as job on vacc cause it takes so long) 
+# Make sure to make temporary Directory BEFORE submitting!
+qiime dada2 denoise-paired \
+  --i-demultiplexed-seqs demux-paired-end_full.qza \
+  --p-n-threads 4 \
+  --p-trim-left-f 16 \
+  --p-trim-left-r 0 \
+  --p-trunc-len-f 289 \
+  --p-trunc-len-r 257 \
+  --o-table table.qza \
+  --o-representative-sequences rep-seqs.qza \
+  --o-denoising-stats denoising-stats.qza
+  
+  #visualize table data
+ qiime feature-table summarize \
+	--i-table table.qza \
+	--o-visualization table.qzv \
+	--m-sample-metadata-file /users/a/r/armccrac/data/AK_pycno_16s/pyc_sylva_manifest.txt
+	
+	#visualize repseqs
+	qiime feature-table tabulate-seqs \
+	--i-data rep-seqs.qza \
+	--o-visualization rep-seqs.qzv
+  
+  qiime metadata tabulate \
+	--m-input-file denoising-stats.qza \
+	--o-visualization denoising-stats.qzv
+	
+	###Calculating Alpha and Beta diversity: Build a phylogenetic tree using - qiime phylogeny align-to-tree-mafft-fasttree
+qiime phylogeny align-to-tree-mafft-fasttree \
+	--i-sequences rep-seqs.qza \
+	--o-alignment aligned-rep-seqs.qza \
+	--o-masked-alignment masked-aligned-rep-seqs.qza \
+	--o-tree unrooted-tree.qza \
+	--o-rooted-tree rooted-tree.qza
+	
+## The next command calculates a whole suite of alpha and beta-diversity metrics!
+#13547 was picked to include ALL data without loosing any samples
+qiime diversity core-metrics-phylogenetic \
+	--i-phylogeny rooted-tree.qza \
+	--i-table table.qza \
+	--p-sampling-depth 13547 \
+	--m-metadata-file /users/a/r/armccrac/data/AK_pycno_16s/pyc_sylva_manifest.txt \
+	--output-dir core-metrics-results
+	
+	qiime diversity alpha-group-significance \
+	--i-alpha-diversity core-metrics-results/faith_pd_vector.qza \
+	--m-metadata-file /users/a/r/armccrac/data/AK_pycno_16s/pyc_sylva_manifest.txt \
+	--o-visualization core-metrics-results/faith-pd-group-significance.qzv
+	
+	qiime diversity alpha-group-significance \
+	--i-alpha-diversity core-metrics-results/evenness_vector.qza \
+	--m-metadata-file /users/a/r/armccrac/data/AK_pycno_16s/pyc_sylva_manifest.txt  \
+	--o-visualization core-metrics-results/evenness-group-significance.qzv
+	
+# generte shannon vector qzv file 
+qiime diversity alpha-group-significance \
+	--i-alpha-diversity core-metrics-results/shannon_vector.qza \
+	--m-metadata-file /users/a/r/armccrac/data/AK_pycno_16s/pyc_sylva_manifest.txt  \
+	--o-visualization core-metrics-results/shannon_vector.qzv
+	
+# alpha rarefaction 
+qiime diversity alpha-rarefaction \
+	--i-table table.qza \
+	--i-phylogeny rooted-tree.qza \
+	--p-max-depth 100000 \
+	--m-metadata-file /users/a/r/armccrac/data/AK_pycno_16s/pyc_sylva_manifest.txt \
+	--o-visualization alpha-rarefaction.qzv
+
+#Test for differences in beta diversity between groups:
+
+qiime diversity beta-group-significance \
+	--i-distance-matrix core-metrics-results/weighted_unifrac_distance_matrix.qza \
+	--m-metadata-file /users/a/r/armccrac/data/AK_pycno_16s/pyc_sylva_manifest.txt \
+	--m-metadata-column site-animal-health \
+	--o-visualization core-metrics-results/weighted-unifrac-site-animal-health-significance.qzv \
+	--p-pairwise
+
+qiime diversity beta-group-significance \
+	--i-distance-matrix core-metrics-results/weighted_unifrac_distance_matrix.qza \
+	--m-metadata-file /users/a/r/armccrac/data/AK_pycno_16s/pyc_sylva_manifest.txt \
+	--m-metadata-column site-status \
+	--o-visualization core-metrics-results/weighted-unifrac-site-status-group-significance.qzv \
+	--p-pairwise
+	
+	
+
+### Processing, filtering, and evaluating the SILVA database (and other reference sequence data) with RESCRIPt
+
+# import Sequences and Taxa file. Use “ranked-propagation” to allow backfilling of taxonomy
+qiime rescript get-silva-data \
+    --p-version '138.1' \
+    --p-target 'SSURef_NR99' \
+    --p--rank-propagation \
+    --o-silva-sequences silva-138.1-ssu-nr99-rna-seqs.qza \
+    --o-silva-taxonomy silva-138.1-ssu-nr99-tax.qza
+	
+# Reverse transcribe sequences because they are all in RNA format and need to be converted to DNA
+qiime rescript reverse-transcribe \
+    --i-rna-sequences silva-138.1-ssu-nr99-rna-seqs.qza \
+    --o-dna-sequences silva-138.1-ssu-nr99-seqs.qza	
+	
+# culling: low quality sequences
+
+qiime rescript cull-seqs \
+    --i-sequences silva-138.1-ssu-nr99-seqs.qza \
+    --o-clean-sequences silva-138.1-ssu-nr99-seqs-cleaned.qza
+	
+#Filtering sequencing by length and taxonomy:
+
+qiime rescript filter-seqs-length-by-taxon \
+    --i-sequences silva-138.1-ssu-nr99-seqs-cleaned.qza \
+    --i-taxonomy silva-138.1-ssu-nr99-tax.qza \
+    --p-labels Archaea Bacteria Eukaryota \
+    --p-min-lens 900 1200 1400 \
+    --o-filtered-seqs silva-138.1-ssu-nr99-seqs-filt.qza \
+    --o-discarded-seqs silva-138.1-ssu-nr99-seqs-discard.qza 
+	
+# Dereplicate sequences: Given the notes outlined for the SILVA 138.1 NR99 769 release, there may be identical full-length sequences with either identical or different taxonomies.
+
+qiime rescript dereplicate \
+    --i-sequences silva-138.1-ssu-nr99-seqs-filt.qza  \
+    --i-taxa silva-138.1-ssu-nr99-tax.qza \
+    --p-mode 'uniq' \
+    --o-dereplicated-sequences silva-138.1-ssu-nr99-seqs-derep-uniq.qza \
+    --o-dereplicated-taxa silva-138.1-ssu-nr99-tax-derep-uniq.qza
+	
+# Make Amplicon-region specific classifier (submit as job - might take a while
+
+qiime feature-classifier extract-reads \
+  --i-sequences silva-138.1-ssu-nr99-seqs-derep-uniq.qza \
+  --p-f-primer CCTACGGGNGGCWGCAG \
+  --p-r-primer GACTACHVGGGTATCTAATCC \
+  --p-min-length 100 \
+  --p-max-length 500 \
+  --o-reads ref-seqs.qza
+  
+# Dereplicate (again) for extracted region
+
+qiime rescript dereplicate \
+    --i-sequences ref-seqs.qza \
+    --i-taxa silva-138.1-ssu-nr99-tax-derep-uniq.qza \
+    --p-mode 'uniq' \
+    --o-dereplicated-sequences ref-seqs-derep.qza \
+    --o-dereplicated-taxa  ref-tax-derep.qza
+
+# Train classifier	
+
+qiime feature-classifier fit-classifier-naive-bayes \
+  --i-reference-reads ref-seqs-derep.qza \
+  --i-reference-taxonomy ref-tax-derep.qza \
+  --o-classifier classifier.qza
+  
+# Test the classifier
+
+qiime feature-classifier classify-sklearn \
+  --i-classifier /users/a/r/armccrac/data/AK_pycno_16s/training-classifier-sylva/classifier.qza \
+  --i-reads /users/a/r/armccrac/data/AK_pycno_16s/rep-seqs.qza \
+  --o-classification taxonomy.qza
+  
+qiime metadata tabulate \
+  --m-input-file taxonomy.qza \
+  --o-visualization taxonomy.qzv 
+
+# Taxa bar plots
+
+qiime taxa barplot \
+  --i-table table.qza \
+  --i-taxonomy taxonomy.qza \
+  --m-metadata-file pyc_sylva_manifest.txt \
+  --o-visualization taxa-bar-plots.qzv
+  
+# format for ancom-bc2 by collapsing to desored level of analysis
+
+qiime taxa collapse \
+  --i-table table.qza \
+  --i-taxonomy taxonomy.qza \
+  --p-level 7 \
+  --o-collapsed-table table-lev7.qza
