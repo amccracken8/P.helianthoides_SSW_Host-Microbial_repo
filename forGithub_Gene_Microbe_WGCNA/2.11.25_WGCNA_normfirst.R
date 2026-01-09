@@ -369,39 +369,47 @@ mME_sig <- mME_sig %>%
                         ifelse(startsWith(treatment, "E"), "Exposed", NA)))
 
 
-sigMods<-read.table("module_list_sig_nf.txt",header=T)
+sigMods<-read.csv("module_list_sig_nf.csv")
+
 sigMods_gm <- sigMods %>% filter(grepl("^d", Gene))
 mME_sig_micro <- mME_sig[mME_sig$name %in% sigMods_gm$Module,]
 
-wgcna_plot <- mME_sig_micro %>% ggplot(., aes(x=treatment, y=name, fill=value)) +
-  geom_tile() +
-  theme_bw() +
+wgcna_plot <- mME_sig_micro %>% 
+  ggplot(aes(x = treatment, y = name, fill = value)) +
+  geom_tile(color = "grey90") +
   geom_vline(xintercept = 5.5, linetype = "dashed", color = "black", size = 1) +
   scale_fill_gradient2(
     low = "springgreen3",
-    high = "purple3",
     mid = "white",
+    high = "purple3",
     midpoint = 0,
-    limit = c(-1,1)) +
-  theme(axis.text.x = element_text(angle=90)) +
-
+    limits = c(-1, 1),
+    name = "corr"
+  ) +
+  theme_bw() +
   theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 12,face = "bold"),  # Horizontal labels, centered, size increased
-    axis.text.y = element_text(size = 12,face = "bold"),  # Increase size of y-axis labels too if needed
-    axis.title.x = element_text(size = 12,face = "bold"),
-    axis.title.y = element_text(size = 12,face = "bold")
-  )+
-  
-  labs(title = "Significant Module-trait Relationships", y = "Modules", x="Health-Group", fill="corr") +
+    axis.text.x = element_text(size = 12, face = "bold", angle = 0, hjust = 0.5),
+    axis.text.y = element_text(size = 10),
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(size = 12, face = "bold"),
+    plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+    panel.border = element_blank(),          # remove default border
+    panel.spacing = unit(0, "lines"),        # no spacing inside facets
+    plot.margin = margin(0, 0, 0, 0, "pt")   # remove margins outside
+  ) +
+  labs(
+    title = "Significant Module-trait Relationships",
+    x = "Exposure Status",
+    y = "Modules"
+  ) +
   scale_x_discrete(labels = function(x) {
-    # Manually create x-axis labels with only "Naive" for the first set and "Exposed" for the second
-    labels <- rep("", length(x))  # Initialize empty labels
-    labels[3] <- "Naive"          # Set "Naive" at the first treatment
-    labels[length(x)-2] <- "Exposed" # Set "Exposed" at the last treatment
-    return(labels)
+    labels <- rep("", length(x))
+    labels[3] <- "Naive"
+    labels[length(x) - 2] <- "Exposed"
+    labels
   })
-  
 
+wgcna_plot
 
 
 

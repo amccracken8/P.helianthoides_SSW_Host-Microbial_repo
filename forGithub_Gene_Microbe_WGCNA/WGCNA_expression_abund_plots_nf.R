@@ -40,7 +40,7 @@ red_deg_genes <- read.csv("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/16
 
 redgenes <- read_lines("red_mod_genes_nf.txt")
 
-dataExpr_reddeg <- dataExpr%>% select(c("V1", "group", redgenes))
+dataExpr_reddeg <- dataExpr%>% dplyr::select(c("V1", "group", redgenes))
 
 
 
@@ -55,7 +55,7 @@ colnames(dataExpr_reddeg)<-make.unique(colnames(dataExpr_reddeg))
 # select(V1, contains("ficolin-2"), contains("echinoidin"),contains("collagen"),contains("lymphocyte"),contains("Complement"),contains("adhesion"),contains("fibrinogen"),matches(".* ADAMTS.*|.*disintegrin.*"), group) %>%
 
 rgenes <- dataExpr_reddeg %>%
-  select(V1, contains("ficolin-2"), contains("echinoidin"),contains("collagenase"),contains("C-type lectin lectoxin"),contains("collagen alpha"),contains("fibrinogen"), group) %>%
+  dplyr::select(V1, contains("ficolin-2"), contains("echinoidin"),contains("collagenase"),contains("C-type lectin lectoxin"),contains("collagen alpha"),contains("fibrinogen"), group) %>%
   pivot_longer(cols = -c(V1, group),  # Exclude 'V1' and 'group' columns
                names_to = "gene",
                values_to = "expression") %>%
@@ -76,13 +76,13 @@ rgenes <- dataExpr_reddeg %>%
 
 
 rgenes$group <- factor(rgenes$group, levels = c("Naive", "Exposed"))
-rgenes$gene_type <- stringr::str_wrap(rgenes$gene_type, width = 10) 
+rgenes$gene_type <- stringr::str_wrap(rgenes$gene_type, width = 15) 
 
 
 #color_palette <- c("black","red","blue","green","orange","magenta","grey","purple","skyblue2","coral2")
 
 unique(rgenes$gene_type) # catch special invisible characters
-rgenes$gene_type <- factor(rgenes$gene_type, levels = c("echinoidin", "ficolin-2", "C-type\nlectin\nlectoxin-Phi1", "collagen\nalpha-1(XVII)","type IV\ncollagenase","fibrinogen"))
+rgenes$gene_type <- factor(rgenes$gene_type, levels = c("echinoidin", "ficolin-2", "C-type lectin\nlectoxin-Phi1", "collagen\nalpha-1(XVII)","type IV\ncollagenase","fibrinogen"))
 
 
 rg <- ggplot(rgenes, aes(x = group, y = expression, fill = group)) +
@@ -120,7 +120,7 @@ rg <- ggplot(rgenes, aes(x = group, y = expression, fill = group)) +
 
 
 # pull out genes of interest to plot
-red_mico <- dataExpr %>% select("V1", "d__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacterales.f__Vibrionaceae.g__Vibrio.s__","d__Bacteria.p__Bacteroidota.c__Bacteroidia.o__Flavobacteriales.f__Flavobacteriaceae.g__Flavobacterium.s__","d__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacterales.f__Moritellaceae.g__Moritella.s__","d__Bacteria.p__Firmicutes.c__Clostridia.o__Peptostreptococcales.Tissierellales.f__Peptostreptococcales.Tissierellales.g__JTB215.s__","d__Bacteria.p__Proteobacteria.c__Alphaproteobacteria.o__Rhizobiales.f__Rhizobiaceae.g__Pseudahrensia.s__","d__Bacteria.p__Fusobacteriota.c__Fusobacteriia.o__Fusobacteriales.f__Fusobacteriaceae.g__Psychrilyobacter.s__","group")
+red_mico <- dataExpr %>% dplyr::select("V1", "d__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacterales.f__Vibrionaceae.g__Vibrio.s__","d__Bacteria.p__Bacteroidota.c__Bacteroidia.o__Flavobacteriales.f__Flavobacteriaceae.g__Flavobacterium.s__","d__Bacteria.p__Proteobacteria.c__Gammaproteobacteria.o__Enterobacterales.f__Moritellaceae.g__Moritella.s__","d__Bacteria.p__Firmicutes.c__Clostridia.o__Peptostreptococcales.Tissierellales.f__Peptostreptococcales.Tissierellales.g__JTB215.s__","d__Bacteria.p__Proteobacteria.c__Alphaproteobacteria.o__Rhizobiales.f__Rhizobiaceae.g__Pseudahrensia.s__","d__Bacteria.p__Fusobacteriota.c__Fusobacteriia.o__Fusobacteriales.f__Fusobacteriaceae.g__Psychrilyobacter.s__","group")
 
 # rename and shorten microbe names
 colnames(red_mico) = c("V1", "Vibrio.spp","Flavobacterium.spp","Moritella.spp","JTB215.spp","Pseudahrensia.spp","Psychrilyobacter.spp","group")
@@ -161,9 +161,105 @@ red.plot <- (rg/rm)+
 
 
 
+############## new plots #####################
+
+
+library(ggplot2)
+library(ggdist)   # for half-violin geom
+library(dplyr)
+
+g <- ggplot(rgenes, aes(x = group, y = expression, fill = group, color = group)) +
+  # # Half violin (distribution)
+  # ggdist::stat_halfeye(
+  #   adjust = 0.6,
+  #   width = 0.8,
+  #   justification = -0.3,  # shift left/right
+  #   .width = 0,
+  #   point_colour = NA,
+  #   alpha = 0.8
+  # ) +
+  # "Rain" points
+  geom_jitter(
+    aes(color = group),
+    width = 0.15,
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  # Optional boxplot overlay for summary
+  geom_boxplot(
+    width = 0.75,
+    outlier.shape = NA,
+    alpha = 0.70,
+    color = "grey1",
+    linewidth = 0.4
+  ) +
+  scale_fill_manual(values = c("Exposed" = "lightcoral", "Naive" = "skyblue2")) +
+  scale_color_manual(values = c("Exposed" = "firebrick3", "Naive" = "steelblue4")) +
+  facet_wrap(~ gene_type, scales = "free_x", ncol = 6, strip.position = "bottom") +
+  labs(title = "Red Module Genes",
+       x = "Group",
+       y = "log2 normalized Expression") +
+  theme_minimal() +
+  theme(
+    #panel.grid = element_blank(),       # removes grid lines
+    axis.text.x = element_blank(),
+    strip.placement = "outside",
+    strip.text.x = element_text(size = 10, angle = 0, hjust = 0.5, face = "bold"),
+    axis.title.x = element_blank(),
+    panel.spacing = unit(0.5, "lines"),
+    panel.border = element_rect(color = "grey", fill = NA, size = 0.5),
+    plot.title = element_text(size = 13, face = "bold", hjust = 0.5)
+  ) +
+  guides(fill = guide_legend(position = "bottom"))
+g 
 
 
 
 
+r <- ggplot(red_long, aes(x = group, y = Value, fill = group, color = group)) +
+  # Half violin for distribution
+  # ggdist::stat_halfeye(
+  #   adjust = 1.0,
+  #   width = 1.0,
+  #   justification = -0.3,  # shift left/right
+  #   .width = 0,
+  #   point_colour = NA,
+  #   alpha = 0.8
+  # ) +
+  # "Rain" points
+  geom_jitter(
+    aes(color = group),
+    width = 0.15,
+    alpha = 0.8,
+    size = 1.5
+  ) +
+  # Optional boxplot overlay
+  geom_boxplot(
+    width = 0.75,
+    outlier.shape = NA,
+    alpha = 0.70,
+    color = "grey1",
+    linewidth = 0.4
+  ) +
+  scale_fill_manual(values = c("Exposed" = "lightcoral", "Naive" = "skyblue2")) +
+  scale_color_manual(values = c("Exposed" = "firebrick3", "Naive" = "steelblue4")) +
+  facet_grid(. ~ microbe, switch = "x") +  # keep microbes along x-axis
+  labs(title = "Red Module Microbes",
+       y = "log2 normalized counts") +
+  theme_minimal() +
+  theme(
+    #panel.grid = element_blank(),       # removes grid lines
+    axis.text.x = element_blank(),
+    strip.placement = "outside",
+    strip.text.x = element_text(size = 10, angle = 0, face = "bold.italic"),
+    axis.title.x = element_blank(),
+    panel.spacing = unit(0.5, "lines"),
+    panel.border = element_rect(color = "grey", fill = NA, size = 0.5),
+    plot.title = element_text(size = 13, face = "bold", hjust = 0.5)
+  ) +
+  guides(fill = guide_legend(position = "bottom"))
+r
 
-
+red.plot <- (g / r) +
+  plot_layout(guides = "collect", axes = "collect") &
+  theme(legend.position = "bottom")

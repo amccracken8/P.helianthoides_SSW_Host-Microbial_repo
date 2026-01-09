@@ -9,6 +9,7 @@ library('intergraph')
 library("tidyverse")
 
 # adjacency matrix must be pre-loaded from WGCNA module before running code. Saving the file as a matrix corrupted it so using the raw object from the WGCNA code up to building the adjacency matrix is necessary before running code below. 
+moduleColors <- read_lines("moduleColors_nf.txt")
 
 RedGenes = names(datExpr)[moduleColors == "red"] 
 
@@ -282,3 +283,36 @@ legend(
   cex = 1.0
 ) 
 
+
+
+
+############ saving and outputing for python ##########
+
+# Assign attributes to vertices
+V(g_subset)$color <- nodeColors
+V(g_subset)$label <- seq_along(V(g_subset))          # numeric labels
+V(g_subset)$degree <- degree(g_subset)              # degree
+
+# Now build a data frame
+nodes_df <- data.frame(
+  id = seq_along(V(g_subset)),        # numeric ID
+  name = V(g_subset)$name,            # node names
+  color = V(g_subset)$color,          # assigned color
+  degree = V(g_subset)$degree         # node degree
+)
+
+E(g_subset)$color <- edgeColors  # assign colors to edges if not already
+
+edges_df <- data.frame(
+  from = as.numeric(head_of(g_subset, E(g_subset))),
+  to = as.numeric(tail_of(g_subset, E(g_subset))),
+  weight = E(g_subset)$weight,
+  color = E(g_subset)$color
+)
+
+head(edges_df)
+
+
+# Export to CSV for Python
+write.csv(nodes_df, "nodes.csv", row.names = FALSE)
+write.csv(edges_df, "edges.csv", row.names = FALSE)

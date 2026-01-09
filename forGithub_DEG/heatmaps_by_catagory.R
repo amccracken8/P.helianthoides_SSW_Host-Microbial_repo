@@ -52,7 +52,7 @@ colnames(df)[3] <- "Gene"
 # adding GO terms from gp.pi table where I previously mapped each go term to Immune, tissue, neuro, and stress catagories
 go.pi <- read.csv("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/genomic_diversity/pixy_pi_go.csv")
   
-cats <- go.pi %>% select(Gene,immune_go,nerv_go,tissue_go,stress_go)
+cats <- go.pi %>% dplyr::select(Gene,immune_go,nerv_go,tissue_go,stress_go)
 
 
 df.sets <- left_join(df,cats, by="Gene")
@@ -64,7 +64,7 @@ df.sets <- df.sets[df.sets$Gene %in% degs$gene_id,]
 # add annotations
 ann.df <- read.csv("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/Pycno_NE_STAR/annotations/NE_ALL_annotated.csv")
 
-ann.df <- ann.df %>% select(gene_id,annote)
+ann.df <- ann.df %>% dplyr::select(gene_id,annote)
 colnames(ann.df)[1] <- "Gene"
 
 df.sets.ann <- left_join(df.sets,ann.df, by="Gene")
@@ -281,7 +281,7 @@ heat.plot <- function(df,title,lfc_cut=0.0) {
     
   # Pivot to wide format (genes as rows, samples as columns)
   df_wide <- df %>%
-    select(sample, Gene, norm_expression) %>%
+    dplyr::select(sample, Gene, norm_expression) %>%
     spread(key = sample, value = norm_expression)
   
   # Create a vector of custom labels for the rows (annote_clean)
@@ -304,23 +304,20 @@ heat.plot <- function(df,title,lfc_cut=0.0) {
   annotation_colors <- list(group = c("Naive" = "skyblue", "Exposed" = "salmon"))
   
   p <- pheatmap(df_matrix, 
-            cellwidth = 15, 
-            cellheight = 15, 
-           border_color = "grey20",
-           cluster_rows = TRUE,
-           cluster_cols = FALSE,
-           scale = "none",
-           color = colorRampPalette(c("springgreen3","white","purple"))(100),
-           show_rownames = TRUE,
-           show_colnames = FALSE,
-           #main = title,
-           labels_row = row_labels,
-           treeheight_row = 0,
-           treeheight_col = 0,
-           annotation_col = col_anno,
-           annotation_colors = annotation_colors,
-           fontsize=12
-           #legend = FALSE
+                cellwidth = 15, 
+                cellheight = 15, 
+                border_color = NA,
+                cluster_rows = TRUE,
+                cluster_cols = FALSE,
+                scale = "none",
+                color = colorRampPalette(c("mediumseagreen","white","purple3"))(100),
+                show_rownames = TRUE,
+                show_colnames = FALSE,
+                labels_row = row_labels,
+                treeheight_row = 0,
+                treeheight_col = 0,
+                fontsize = 12,
+                fontfamily = "Arial"
   )
   
   #library(gridExtra)
@@ -346,7 +343,7 @@ ecm <- heat.plot(ecm_df,"ECM")
 adh <- heat.plot(adh.sig_df,"singal and adhesion")
 rem <- heat.plot(rem.rep_df,"remodeling genes")
 
-grid.arrange(comp$gtable, reg$gtable, rec$gtable, ncol=1)
+grid.arrange(comp$gtable, reg$gtable, rec$gtable, ncol=3)
 
 
 
@@ -374,7 +371,7 @@ df <- df %>%
 
 # Pivot to wide format (genes as rows, samples as columns)
 df_wide <- df %>%
-  select(sample, Gene, norm_expression) %>%
+  dplyr::select(sample, Gene, norm_expression) %>%
   spread(key = sample, value = norm_expression)
 
 # Create a vector of custom labels for the rows (annote_clean)
