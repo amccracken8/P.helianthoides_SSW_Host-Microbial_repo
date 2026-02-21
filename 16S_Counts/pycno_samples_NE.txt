@@ -1,0 +1,11 @@
+sampleID	health	site	health_site_status	sample
+AH1R10	healthy	1	naive	HH01_10
+AH1R17	healthy	1	naive	HH01_17
+AH1R3	healthy	1	naive	HH01_03
+AH2R12	healthy	2	naive	HH02_12
+AH2R5	healthy	2	naive	HH02_05
+E12H3R	healthy	12	exposed	SH12_03
+E12H4R	healthy	12	exposed	SH12_04
+E13H8R	healthy	13	exposed	SH13_08
+E13H9R	healthy	13	exposed	SH13_09
+E15H3R	healthy	15	exposed	SH15_03

@@ -1,6 +1,3 @@
-# ANCOMBC 
-# 4/19/22
-
 library(microbiome)
 library(phyloseq)
 library(qiime2R)
@@ -8,9 +5,6 @@ library(ANCOMBC)
 library(knitr)
 library(kableExtra)
 
-#Working Directory
-getwd()
-setwd("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/16s_Sylva/ancombc")
 
 #Use table-lev7.qza for species and table.qza for ASV
 physeq_fam<-qza_to_phyloseq(
@@ -24,18 +18,14 @@ meta <- read.table("pyc_sylva_manifest.txt", header=T)
 Manifest <- read.table("pycno_samples_NE.txt", header = TRUE)
 
 # suset metadata by desired manifest file
-
 meta_sub <- meta[meta$sampleID %in% Manifest$manifestID,]
   
-
-### Subsisting the files for pairwise analysis of differential abundance ###
 
 #Subset samples, just healthy animals (inclusive of Naive and Exposed samples)
 pseq_healthy <- subset_samples(physeq_fam, animal.health == "healthy")
 
 #Subset samples, just impacted sites (inclusive of Exposed and Wasting samples)
 pseq_impacted <- subset_samples(physeq_fam, site.status == "impacted")
-
 
 #subset to samples desired
 pseq_sub <- subset_samples(physeq_fam, animalID %in% meta_sub$animalID)

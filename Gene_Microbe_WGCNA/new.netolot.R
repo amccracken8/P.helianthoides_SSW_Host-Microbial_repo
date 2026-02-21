@@ -1,7 +1,5 @@
 ### exploring close relationships in the RED module
 
-setwd("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/16s_Sylva/qiime2_fullset/WGCNA/Networkplot")
-
 library('igraph')
 library('network')
 library('networkD3')
@@ -22,7 +20,7 @@ topConnections = sort(targetConnections, decreasing = TRUE)
 
 topcons = names(topConnections)[1:30]
 
-ann.df <- read.csv("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/Pycno_NE_STAR/annotations/NE_ALL_annotated.csv")
+ann.df <- read.csv("NE_ALL_annotated.csv")
 
 
 
@@ -55,7 +53,7 @@ plot(
 ################ genes of interest
 
 #####
-ann.df <- read.csv("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/Pycno_NE_STAR/annotations/NE_ALL_annotated.csv")
+ann.df <- read.csv("NE_ALL_annotated.csv")
 
 ann.df <- ann.df %>% select(gene_id,annote)
 
@@ -276,7 +274,7 @@ plot(1, 1, type = "n", xlab = "", ylab = "", axes = FALSE, main = "")
 
 legend_labels <- paste(seq_along(V(g_subset)), V(g_subset)$name, sep = ": ")  # Combine number and name
 legend(
-  "topright",                          # Position legend (adjust as necessary)
+  "topright",             
   legend = legend_labels,
   text.col = "black",
   bg = "white",
@@ -297,7 +295,7 @@ V(g_subset)$degree <- degree(g_subset)              # degree
 nodes_df <- data.frame(
   id = seq_along(V(g_subset)),        # numeric ID
   name = V(g_subset)$name,            # node names
-  color = V(g_subset)$color,          # assigned color
+  color = V(g_subset)$color,        
   degree = V(g_subset)$degree         # node degree
 )
 

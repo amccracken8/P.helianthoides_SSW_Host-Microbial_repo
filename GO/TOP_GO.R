@@ -6,17 +6,15 @@ library(topGO)
 library(GO.db)
 library(tidyverse)
 library(GOfuncR)
-setwd("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/Pycno_NE_STAR/GO/TopGO")
 
-pycno_go <- read.table("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/Pycno_NE_STAR/GO/pycnoGO_NE.tsv", header=T)
-NE_stat <- read.csv("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/Pycno_NE_STAR/DESeq2/res_NE.csv")
+pycno_go <- read.table("pycnoGO_NE.tsv", header=T)
+NE_stat <- read.csv("res_NE.csv")
 colnames(NE_stat)[1] <- "geneID"
 
-dim(pycno_go[pycno_go$geneID %in% NE_stat$geneID,])[1] # confirm data frmes match (yes) 
+dim(pycno_go[pycno_go$geneID %in% NE_stat$geneID,])[1] # confirm data frames match
 
 
 # significant = 1 nonsignificant = 0 for Fisher Exact Test of TopGO Enrichment
-# define groups to explore in topGO
 NE_stat <- NE_stat %>%
   mutate(Group = case_when(
     log2FoldChange > 0 & padj < 0.05 ~ "up_E",
@@ -24,7 +22,6 @@ NE_stat <- NE_stat %>%
     TRUE ~ "nonsig"
   ))
 
-# confirm nubmer of DEG's assessed - should match deseq object
 sum(NE_stat$Group=="up_E") #1263
 sum(NE_stat$Group=="up_N") #743
 
@@ -33,7 +30,6 @@ sum(NE_stat$Group=="up_N") #743
 gene2GO <- strsplit(pycno_go$GO, ";")
 names(gene2GO) <- pycno_go$geneID
 
-# Create a named vector of log fold changes
 geneList_N <- setNames(NE_stat$padj, NE_stat$geneID)
 geneList_E <- setNames(NE_stat$padj, NE_stat$geneID)
 
@@ -45,7 +41,7 @@ geneList_E <- setNames(as.integer(NE_stat$Group == "up_E"), NE_stat$geneID)
 # Create topGO data object
 GOdata_N <- new("topGOdata",
               description = "GO enrichment analysis",
-              ontology = "BP",  # Use "BP" for Biological Process, "MF" for Molecular Function, or "CC" for Cellular Component
+              ontology = "BP",  # Use "BP" for Biological Process
               allGenes = geneList_N,
               geneSel = function(x) x == 1,# Define how to select target group expressed genes
               nodeSize = 10, # define min number of terms for category to be considered
@@ -55,10 +51,10 @@ GOdata_N <- new("topGOdata",
 # Create topGO data object
 GOdata_E <- new("topGOdata",
               description = "GO enrichment analysis",
-              ontology = "BP",  # Use "BP" for Biological Process, "MF" for Molecular Function, or "CC" for Cellular Component
+              ontology = "BP",  
               allGenes = geneList_E,
-              geneSel = function(x) x == 1,# Define how to select target group expressed genes
-              nodeSize = 10, # define min number of terms for category to be considered
+              geneSel = function(x) x == 1,
+              nodeSize = 10,
               annot = annFUN.gene2GO,
               gene2GO = gene2GO)
 
@@ -101,11 +97,9 @@ E_pc_filt$group <- "Exposed"
 N_pc_filt$group <- "Naive"
 
 
-
-
 # save dfs  
-N_pc_filt <- read.csv("/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/SSWpt2_Final_Code_organized/Gene Ontology/forDryad/Naive_TOPGO_pc.csv")
-E_pc_filt <- read.csv("/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/SSWpt2_Final_Code_organized/Gene Ontology/forDryad/Exposed_TOPGO_pc.csv")
+N_pc_filt <- read.csv("Naive_TOPGO_pc.csv")
+E_pc_filt <- read.csv("Exposed_TOPGO_pc.csv")
 
 N_pc_filt$gene_ratio <- N_pc_filt$Significant / N_pc_filt$Annotated
 E_pc_filt$gene_ratio <- E_pc_filt$Significant / E_pc_filt$Annotated
@@ -114,29 +108,22 @@ E_pc_filt$gene_ratio <- E_pc_filt$Significant / E_pc_filt$Annotated
 # Choose N_pc_filt or E_pc_filt as df
 #======================================================# 
 
-### filter superfulous terms. 
-#for each go term, check if parental term is also in list. if not keep term. if yes delete child term. this way we draw out the most significant largest term. 
-
 df = N_pc_filt
 
-### manually remove "error" causing terms and categories that are too broad > 1000 genes per category such as "metabolic process" 
+###  removecategories that are too broad > 500 genes per category such as "metabolic process" 
 df <- df[!df$Annotated >= 500, ]
 
-  # Initialize the vector for redundant terms
+# Initialize the vector for redundant terms
 redundant_terms <- c()
 
-# Get the list of terms from E_elim_filt
-# remove super large categories > 1000 terms
 # Only GO:0140694 caused errors and was removed (membraneless organelle assembly) 
 GO_list <- df$GO.ID
 items_to_remove <- c("GO:0140694")
 GO_list <- GO_list[!GO_list %in% items_to_remove]
 terms_list <- df$Term
 
-# Iterate over each term in the list
+
 for (i in GO_list) {
-  # Get parent terms for the current term
-  
   term.i = df$Term[df$GO.ID==i] # term associated with term ID. 
   parents <- get_parent_nodes(i)$parent_name  # Extract parent terms
   parents <- parents[parents != term.i]

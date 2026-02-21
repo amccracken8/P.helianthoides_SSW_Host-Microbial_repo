@@ -1,28 +1,27 @@
 # maing plots from GO MWU output of Salmon Module from WGNCA
 #Top correlated genes in module
 
-setwd("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/16s_Sylva/qiime2_fullset/WGCNA")
 library(tidyverse)
 library(data.table)
 library(patchwork)
 
 ###differentually abundant genes
-degs <- read.csv("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/Pycno_NE_STAR/annotations/NE_DEG_annotated.csv")
+degs <- read.csv("NE_DEG_annotated.csv")
 
 ###differentially abundant microbes
 
-microbes <- read.csv("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/16s_Sylva/ancombc_wgcna/8.1.24_res.NvE_Sylva.csv") # 244 microbial families found passing the >10 reads/sample average 
+microbes <- read.csv("8.1.24_res.NvE_Sylva.csv") # 244 microbial families found passing the >10 reads/sample average 
 dams <- microbes[microbes$diff_abn.site.animal.healthSH==TRUE,] # 39 differential abundance microbes
 
 
 ### Gene ontology mapping to DEGs
-pGO <- fread("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/Pycno_NE_STAR/GO/Pycno_GO_formatted.tsv")
+pGO <- fread("Pycno_GO_formatted.tsv")
 colnames(pGO) <- c("gene_id","GO")
 degs_GO <- left_join(degs,pGO, by="gene_id")
 
 
 
-dataExpr <- fread("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/16s_Sylva/qiime2_fullset/WGCNA/dataExpr_normfirst.txt")
+dataExpr <- fread("dataExpr_normfirst.txt")
 
 dataExpr <- data.table(dataExpr)
 
@@ -36,7 +35,7 @@ dataExpr$group <- case_when(
 )
 
 ### select all genes in red module that are also DEGs for plotting
-red_deg_genes <- read.csv("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/16s_Sylva/qiime2_fullset/WGCNA/red_mod_degs_nf.csv")
+red_deg_genes <- read.csv("red_mod_degs_nf.csv")
 
 redgenes <- read_lines("red_mod_genes_nf.txt")
 
@@ -51,8 +50,6 @@ colnames(dataExpr_reddeg)<-make.unique(colnames(dataExpr_reddeg))
 
 
 ###### Plotting Module Genes #######
-
-# select(V1, contains("ficolin-2"), contains("echinoidin"),contains("collagen"),contains("lymphocyte"),contains("Complement"),contains("adhesion"),contains("fibrinogen"),matches(".* ADAMTS.*|.*disintegrin.*"), group) %>%
 
 rgenes <- dataExpr_reddeg %>%
   dplyr::select(V1, contains("ficolin-2"), contains("echinoidin"),contains("collagenase"),contains("C-type lectin lectoxin"),contains("collagen alpha"),contains("fibrinogen"), group) %>%
@@ -78,8 +75,6 @@ rgenes <- dataExpr_reddeg %>%
 rgenes$group <- factor(rgenes$group, levels = c("Naive", "Exposed"))
 rgenes$gene_type <- stringr::str_wrap(rgenes$gene_type, width = 15) 
 
-
-#color_palette <- c("black","red","blue","green","orange","magenta","grey","purple","skyblue2","coral2")
 
 unique(rgenes$gene_type) # catch special invisible characters
 rgenes$gene_type <- factor(rgenes$gene_type, levels = c("echinoidin", "ficolin-2", "C-type lectin\nlectoxin-Phi1", "collagen\nalpha-1(XVII)","type IV\ncollagenase","fibrinogen"))
@@ -201,7 +196,7 @@ g <- ggplot(rgenes, aes(x = group, y = expression, fill = group, color = group))
        y = "log2 normalized Expression") +
   theme_minimal() +
   theme(
-    #panel.grid = element_blank(),       # removes grid lines
+    #panel.grid = element_blank(),      
     axis.text.x = element_blank(),
     strip.placement = "outside",
     strip.text.x = element_text(size = 10, angle = 0, hjust = 0.5, face = "bold"),
@@ -221,7 +216,7 @@ r <- ggplot(red_long, aes(x = group, y = Value, fill = group, color = group)) +
   # ggdist::stat_halfeye(
   #   adjust = 1.0,
   #   width = 1.0,
-  #   justification = -0.3,  # shift left/right
+  #   justification = -0.3, 
   #   .width = 0,
   #   point_colour = NA,
   #   alpha = 0.8
@@ -248,7 +243,7 @@ r <- ggplot(red_long, aes(x = group, y = Value, fill = group, color = group)) +
        y = "log2 normalized counts") +
   theme_minimal() +
   theme(
-    #panel.grid = element_blank(),       # removes grid lines
+    #panel.grid = element_blank(),    
     axis.text.x = element_blank(),
     strip.placement = "outside",
     strip.text.x = element_text(size = 10, angle = 0, face = "bold.italic"),

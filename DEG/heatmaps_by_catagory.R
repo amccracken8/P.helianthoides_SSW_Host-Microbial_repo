@@ -10,24 +10,22 @@ library(pheatmap)
 #rename ALL vectors? 
 
 ###differentually abundant genes
-degs <- read.csv("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/Pycno_NE_STAR/annotations/NE_DEG_annotated.csv")
+degs <- read.csv("NE_DEG_annotated.csv")
 
 ###differentially abundant microbes
 
-microbes <- read.csv("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/16s_Sylva/ancombc_wgcna/8.1.24_res.NvE_Sylva.csv") # 244 microbial families found passing the >10 reads/sample average 
+microbes <- read.csv("8.1.24_res.NvE_Sylva.csv") # 244 microbial families found passing the >10 reads/sample average 
 dams <- microbes[microbes$diff_abn.site.animal.healthSH==TRUE,] # 39 differential abundance microbes
 
 
 ### Gene ontology mapping to DEGs
-pGO <- fread("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/Pycno_NE_STAR/GO/Pycno_GO_formatted.tsv")
+pGO <- fread("Pycno_GO_formatted.tsv")
 colnames(pGO) <- c("gene_id","GO")
 degs_GO <- left_join(degs,pGO, by="gene_id")
 
 
-
-dataExpr <- fread("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/16s_Sylva/qiime2_fullset/WGCNA/dataExpr_normfirst.txt")
+dataExpr <- fread("dataExpr_normfirst.txt")
 dataExpr <- data.table(dataExpr)
-
 
 
 # load in normalized DESeq2 counts data
@@ -49,8 +47,8 @@ colnames(df)[1] <- "sample"
 colnames(df)[3] <- "Gene"
 
 
-# adding GO terms from gp.pi table where I previously mapped each go term to Immune, tissue, neuro, and stress catagories
-go.pi <- read.csv("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/genomic_diversity/pixy_pi_go.csv")
+# adding GO terms from gp.pi table which were previously mapped each go term to Immune, tissue, neuro, and stress catagories
+go.pi <- read.csv("pixy_pi_go.csv")
   
 cats <- go.pi %>% dplyr::select(Gene,immune_go,nerv_go,tissue_go,stress_go)
 
@@ -62,7 +60,7 @@ df.sets <- df.sets[df.sets$Gene %in% degs$gene_id,]
 
 
 # add annotations
-ann.df <- read.csv("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/Pycno_NE_STAR/annotations/NE_ALL_annotated.csv")
+ann.df <- read.csv("NE_ALL_annotated.csv")
 
 ann.df <- ann.df %>% dplyr::select(gene_id,annote)
 colnames(ann.df)[1] <- "Gene"
@@ -290,7 +288,6 @@ heat.plot <- function(df,title,lfc_cut=0.0) {
     arrange(match(Gene, df_wide$Gene)) %>%
     pull(annote_clean)
   
-  # Step 5: Ensure that the first five samples are Naive, and the next five are Exposed
   # Create a vector for column annotation
   sample_labels <- ifelse(colnames(df_wide)[-1] %in% df$sample[df$group == "Naive"], "Naive", "Exposed")
   
@@ -380,7 +377,6 @@ row_labels <- df %>%
   arrange(match(Gene, df_wide$Gene)) %>%
   pull(annote_clean)
 
-# Step 5: Ensure that the first five samples are Naive, and the next five are Exposed
 # Create a vector for column annotation
 sample_labels <- ifelse(colnames(df_wide)[-1] %in% df$sample[df$group == "Naive"], "Naive", "Exposed")
 

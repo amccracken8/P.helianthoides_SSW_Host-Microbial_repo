@@ -137,7 +137,7 @@ picked_power = 7
 ### create the network using the blockwiseModules command
 
 temp_cor <- cor       
-cor <- WGCNA::cor         # Force it to use WGCNA cor function (fix a namespace conflict issue)
+cor <- WGCNA::cor 
 
 
 
@@ -170,7 +170,6 @@ plotDendroAndColors(geneTree, moduleColors, "Dynamic Tree Cut",
 
 #################################################################
 
-#======================re-start here for plots ====================================================#
 #==== files to load in from WGCNA run to make plots and analysis below =================#
 datExpr<-read.csv("dataExpr_normfirst.txt", row.names=1)
 moduleColors <- read_lines("moduleColors_nf.txt")

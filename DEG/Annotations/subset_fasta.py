@@ -20,7 +20,7 @@ def subset_fasta(input_fasta, gene_list, output_fasta):
                 SeqIO.write(record, output_file, 'fasta')
 
 # Example usage
-input_fasta = '/users/a/r/armccrac/data/AK_pycno_RNA/pycno_ref/Pycno_coding_sequences.fasta'
+input_fasta = 'Home/data/AK_pycno_RNA/pycno_ref/Pycno_coding_sequences.fasta'
 gene_list = 'star_deseqfilt_transcript_ids.txt'
 output_fasta = 'star_deseqfilt.transcripts.fasta'
 

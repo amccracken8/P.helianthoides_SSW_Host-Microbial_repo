@@ -1,6 +1,3 @@
-# 10/3/23
-# DEseq on Pycnopodia Transcripts
-
 ## Import the libraries that we're likely to need in this session
 library(DESeq2)
 library(dplyr)
@@ -12,7 +9,6 @@ library(wesanderson)
 library(vsn)  ### First: BiocManager::install("vsn") AND BiocManager::install("hexbin")
 
 # Navigate to star_countsMatrix.txt directory
-setwd("C:/Users/andre/Desktop/GitHub/AK_Pycno_RNAxMetagen/Pycno_NE_STAR/DESeq2")
 
 countsTable <- read.table("star_countsMatrix.txt", header=TRUE, row.names=1)
 countsTable_NE <- countsTable[, 1:10]
